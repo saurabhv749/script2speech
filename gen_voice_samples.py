@@ -27,6 +27,9 @@ python gen_voice_samples.py
 ```
 """
 
+if not os.path.exists(VOICE_SAMPLES_DIR):
+    os.makedirs(VOICE_SAMPLES_DIR)
+
 balacoon = TTSModel()
 
 speech_models = balacoon.get_model_names()
@@ -37,11 +40,10 @@ for model_name in speech_models:
     speakers = balacoon.get_speakers(model_name_str=model_name)
     for speaker in speakers:
         output_filename = model_name.replace("cpu.addon", "_" + speaker)
-        voice_sample_name = output_filename
         output_filename += ".wav"
         output_path = os.path.join(VOICE_SAMPLES_DIR, output_filename)
         # add sample
-        voice_samples.append((voice_sample_name, output_path))
+        voice_samples.append((model_name, speaker, output_path))
 
         balacoon.synthesize_audio(
             model_name_str=model_name,
@@ -56,8 +58,8 @@ with open("README.md", "w") as f:
     f.write("\n\n")
     f.write("## Voice Samples\n")
     # add samples in a table
-    f.write("| Model_Speaker | Audio Sample |\n")
-    for voice_sample_name, output_path in voice_samples:
+    f.write("| Model | Speaker | Audio Sample |\n")
+    for model_name, speaker, output_path in voice_samples:
         f.write(
-            f"| {voice_sample_name} | <audio controls><source src='{output_path}' type='audio/wav'></audio> |\n"
+            f"| {model_name} | {speaker} | <audio controls><source src='./{output_path}' type='audio/wav'></audio> |\n"
         )

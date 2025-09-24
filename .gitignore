@@ -1,3 +1,4 @@
 .idea
 audios/
 tts_models/
+__pycache__/

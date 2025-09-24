@@ -3,7 +3,7 @@ import logging
 from threading import Lock
 from scipy.io.wavfile import write
 
-from balacoon_tts import TTS  # pyright: ignore[reportMissingImports]
+from balacoon_tts import TTS
 from huggingface_hub import snapshot_download
 
 # locker that disallow access to the tts object from more then one thread
@@ -26,10 +26,11 @@ class TTSModel:
     def download_models(self):
         snapshot_download(
             repo_id=self.repo_id,
-            allow_patterns=["*_cpu.addon"],
+            allow_patterns=["en_us*_cpu.addon"],
             local_dir=LOCAL_DIR,
         )
-        self.models = os.listdir(LOCAL_DIR)
+        # filter models that are downloaded
+        self.models = [f for f in os.listdir(LOCAL_DIR) if "cpu.addon" in f]
 
     def get_model_names(self):
         return self.models
@@ -40,16 +41,15 @@ class TTSModel:
         uses cached list of speakers for the given model name
         or loads the addon and checks what are the speakers.
         """
-        with locker:
-            # need to load this model to learn the list of speakers
-            model_path = os.path.join(LOCAL_DIR, model_name_str)
-            if self.cur_model != model_name_str:
-                if tts is not None:
-                    del tts
-                self.tts = TTS(model_path)
-                speakers = tts.get_speakers()
-                self.model_to_speakers[model_name_str] = speakers
-                self.cur_model = model_name_str
+        model_path = os.path.join(LOCAL_DIR, model_name_str)
+        if self.cur_model != model_name_str:
+            if self.tts is not None:
+                del self.tts
+                self.tts = None
+            self.tts = TTS(model_path)
+            speakers = self.tts.get_speakers()
+            self.model_to_speakers[model_name_str] = speakers
+            self.cur_model = model_name_str
 
     def get_speakers(self, model_name_str: str):
         if model_name_str not in self.model_to_speakers:
@@ -73,14 +73,12 @@ class TTSModel:
         if not text_str or not model_name_str or not speaker_str or not output_path:
             logging.info("text, model name, speaker or output_path are not provided")
             return None
-        expected_model_path = os.path.join(LOCAL_DIR, model_name_str)
 
-        with locker:
-            self.set_model(expected_model_path)
-            if len(text_str) > self.max_length:
-                print(f"{text_str[:50]} has length over 1024 trimming.....")
-                # truncate the text
-                text_str = text_str[: self.max_length]
-            samples = self.tts.synthesize(text_str, speaker_str)
-            sampling_rate = self.tts.get_sampling_rate()
-            write(output_path, sampling_rate, samples)
+        self.set_model(model_name_str=model_name_str)
+        if len(text_str) > self.max_length:
+            logging.info(f"{text_str[:50]} has length over 1024 trimming.....")
+            # truncate the text
+            text_str = text_str[: self.max_length]
+        samples = self.tts.synthesize(text_str, speaker_str)
+        sampling_rate = self.tts.get_sampling_rate()
+        write(output_path, sampling_rate, samples)

@@ -13,6 +13,10 @@ works on CPU, Linux only
 ```
 git clone  https://github.com/saurabhv749/script2speech.git
 cd script2speech
+
+conda create -n tts python=3.11
+conda init bash
+conda activate tts
 pip install -r requirements.txt
 ```
 

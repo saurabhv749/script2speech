@@ -2,7 +2,7 @@ import os
 from model import TTSModel
 from utils import model_html, speaker_html
 
-VOICE_SAMPLES_DIR = "voice_samples"
+VOICE_SAMPLES_DIR = "docs/voice_samples"
 SAMPLE_SPEECH_TEXT = "Listen carefully.. the secret to success is persistence. The journey to greatness is long, but every step.. every challenge.. builds your strength."
 DOCS_CONTENT = """
 <!DOCTYPE html>
@@ -39,9 +39,7 @@ for model_name in speech_models:
         output_filename += ".wav"
         output_path = os.path.join(VOICE_SAMPLES_DIR, output_filename)
 
-        # rel path to audio file from docs/index.html
-        sample_audio_path = "../" + output_path
-        DOCS_CONTENT += speaker_html(speaker=speaker, file_path=sample_audio_path)
+        DOCS_CONTENT += speaker_html(speaker=speaker, file_path=output_path)
 
         balacoon.synthesize_audio(
             model_name_str=model_name,

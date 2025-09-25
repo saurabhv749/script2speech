@@ -2,26 +2,27 @@
 python script to generate audio files from a text file
 using `balacoon_tts`
 
-works on CPU, Linux only
+> works on CPU, Linux only
+
+> Don't use multiple dots (... or ....+)
 
 ### SETUP
 ```
 git clone  https://github.com/saurabhv749/script2speech.git
 cd script2speech
 
-conda create -n tts python=3.11
+conda create -n tts python=3.10
 conda init bash
 conda activate tts
 pip install -r requirements.txt
 ```
 
 ### Generate voice samples
-This will also update `README.md` file
+This will also update `index.html` file
 ```
 python gen_voice_samples.py
 ```
 
+### Voice Samples
 
-## Voice Samples
-| Model | Speaker | Audio Sample |
-| en_us_cmuartic_jets_cpu.addon | aew | <audio controls><source src='./voice_samples/en_us_cmuartic_jets__aew.wav' type='audio/wav'></audio> |
+For direct previews, visit the [script2speech voice samples](https://saurabhv749.github.io/script2speech/).

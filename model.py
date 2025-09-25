@@ -1,15 +1,12 @@
 import os
 import logging
-from threading import Lock
-from scipy.io.wavfile import write
-
 from balacoon_tts import TTS
 from huggingface_hub import snapshot_download
 
-# locker that disallow access to the tts object from more then one thread
-locker = Lock()
+from utils import audio_samples_to_file
 
 LOCAL_DIR = "tts_models"
+MYTTS = None
 
 
 class TTSModel:
@@ -18,7 +15,6 @@ class TTSModel:
         self.models = []
         self.cur_model = ""
         self.model_to_speakers = dict()
-        self.tts = None
         self.max_length = 1024
 
         self.download_models()
@@ -26,7 +22,7 @@ class TTSModel:
     def download_models(self):
         snapshot_download(
             repo_id=self.repo_id,
-            allow_patterns=["en_us*_cpu.addon"],
+            allow_patterns=["*_cpu.addon"],
             local_dir=LOCAL_DIR,
         )
         # filter models that are downloaded
@@ -43,11 +39,9 @@ class TTSModel:
         """
         model_path = os.path.join(LOCAL_DIR, model_name_str)
         if self.cur_model != model_name_str:
-            if self.tts is not None:
-                del self.tts
-                self.tts = None
-            self.tts = TTS(model_path)
-            speakers = self.tts.get_speakers()
+            global MYTTS
+            MYTTS = TTS(model_path)
+            speakers = MYTTS.get_speakers()
             self.model_to_speakers[model_name_str] = speakers
             self.cur_model = model_name_str
 
@@ -74,11 +68,12 @@ class TTSModel:
             logging.info("text, model name, speaker or output_path are not provided")
             return None
 
-        self.set_model(model_name_str=model_name_str)
         if len(text_str) > self.max_length:
             logging.info(f"{text_str[:50]} has length over 1024 trimming.....")
             # truncate the text
             text_str = text_str[: self.max_length]
-        samples = self.tts.synthesize(text_str, speaker_str)
-        sampling_rate = self.tts.get_sampling_rate()
-        write(output_path, sampling_rate, samples)
+        samples = MYTTS.synthesize(text_str, speaker_str)
+        sampling_rate = MYTTS.get_sampling_rate()
+        audio_samples_to_file(
+            sample_rate=sampling_rate, samples=samples, filename=output_path
+        )

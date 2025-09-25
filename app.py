@@ -35,7 +35,8 @@ if __name__ == "__main__":
     with open(args.file, "r", encoding="utf-8") as f:
         dialogues = f.readlines()
 
-    for i, dialogue in enumerate(dialogues, start=1):
+    i = 1
+    for dialogue in dialogues:
         dialogue = dialogue.strip()
         if not dialogue:
             continue
@@ -43,3 +44,4 @@ if __name__ == "__main__":
         output_file = os.path.join(SPEECH_OUTPUT_DIR, f"{i:03d}_{safe_text}.wav")
         generate_audio(dialogue, args.model_name, args.speaker, output_file)
         print(f"Generated audio: {output_file}")
+        i += 1

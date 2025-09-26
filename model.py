@@ -1,7 +1,7 @@
 import os
 import logging
 from balacoon_tts import TTS
-from huggingface_hub import snapshot_download
+from huggingface_hub import snapshot_download, list_repo_files
 
 from utils import audio_samples_to_file
 
@@ -17,19 +17,19 @@ class TTSModel:
         self.model_to_speakers = dict()
         self.max_length = 1024
 
-        self.download_models()
+        self.models = self.get_model_names()
 
-    def download_models(self):
+    def download_models(self, model_pattern: list[str]):
         snapshot_download(
             repo_id=self.repo_id,
-            allow_patterns=["*_cpu.addon"],
+            allow_patterns=model_pattern,
             local_dir=LOCAL_DIR,
         )
-        # filter models that are downloaded
-        self.models = [f for f in os.listdir(LOCAL_DIR) if "cpu.addon" in f]
 
     def get_model_names(self):
-        return self.models
+        repo_files = list_repo_files(self.repo_id)
+        models = [f for f in repo_files if f.endswith("cpu.addon")]
+        return models
 
     def set_model(self, model_name_str: str):
         """
@@ -38,6 +38,9 @@ class TTSModel:
         or loads the addon and checks what are the speakers.
         """
         model_path = os.path.join(LOCAL_DIR, model_name_str)
+        if not os.path.exists(model_path):
+            self.download_models(model_pattern=[model_name_str])
+
         if self.cur_model != model_name_str:
             global MYTTS
             MYTTS = TTS(model_path)

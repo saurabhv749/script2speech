@@ -27,7 +27,7 @@ if not os.path.exists(VOICE_SAMPLES_DIR):
 
 balacoon = TTSModel()
 
-speech_models = balacoon.get_model_names()
+speech_models = balacoon.models
 
 for model_name in speech_models:
     balacoon.set_model(model_name_str=model_name)

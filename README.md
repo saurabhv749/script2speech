@@ -20,7 +20,7 @@ pip install -r requirements.txt
 ### Run the script
 
 ```
-python app.py --file _script.txt_ --model_name "en_us_hifi92_light_cpu.addon" --speaker "92"
+python app.py --file script.txt --model_name "en_us_hifi92_light_cpu.addon" --speaker "92"
 ```
 this will output dialogues to _audios/_ folder
 
